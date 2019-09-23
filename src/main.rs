@@ -1,5 +1,10 @@
 #![allow(dead_code)]
 
+#[macro_use]
+extern crate ndarray;
+
+mod grid;
+
 use tetra::graphics::{self, Color};
 use tetra::{Context, ContextBuilder, State};
 
