@@ -41,14 +41,12 @@ impl Board {
 
     /// Make a new random board with a given size and number of mines.
     pub fn make_random(size: (usize, usize), mines: usize) -> Result<Board, &'static str> {
-        let (h, w) = size;
-        let mut rng = rand::thread_rng();
         if mines > size.0 * size.1 / 2 {
             return Err("Mine density cannot be greater than 50%");
         }
         let mut board = Board::make_empty(size);
         for _ in 0..mines {
-            board.place_mine(&mut rng);
+            board.place_mine();
         }
         Ok(board)
     }
@@ -56,7 +54,6 @@ impl Board {
     /// Ensure that a particular starting place on the board is safe. Assumes
     /// that there is sufficient empty space in the board to relocate mines.
     pub fn ensure_safe_start(&mut self, start: Pos) {
-        let mut rng = rand::thread_rng();
         // Relocating mines does not actually _ensure_ safety, so just keep
         // doing it until it works.
         loop {
@@ -66,7 +63,7 @@ impl Board {
                 // Remove mines from this square and adjacent ones.
                 _ => {
                     for neighbor_pos in neighbors_coords(start) {
-                        self.relocate_mine(rng, neighbor_pos);
+                        self.relocate_mine(neighbor_pos);
                     }
                 }
             }
@@ -76,6 +73,7 @@ impl Board {
     /// Place a mine on a board. Assumes that there is sufficient empty space to
     /// place a mine.
     fn place_mine(&mut self) {
+        let mut rng = rand::thread_rng();
         // Keep trying to place the mine until successful.
         let mut pos: Pos;
         loop {
@@ -105,7 +103,7 @@ impl Board {
         // Reset this square so that it is not counted in the number of mines.
         self.tiles[pos] = Tile::Safe(0);
         let mut mine_count = 0;
-        for neighbor in self.neighbor_slice(pos) {
+        for neighbor in self.neighbor_slice_mut(pos) {
             match neighbor {
                 // Decrement each adjacent square.
                 Tile::Safe(n) => *n -= 1,
@@ -121,7 +119,7 @@ impl Board {
     /// spot!).
     fn relocate_mine(&mut self, pos: Pos) {
         if self.remove_mine(pos) {
-            self.place_mine(rng)
+            self.place_mine()
         }
     }
 
