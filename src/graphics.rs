@@ -43,11 +43,27 @@ pub fn draw_borders(ctx: &mut Context, nineslice: &mut NineSlice) -> tetra::Resu
 }
 
 pub fn draw_tiles(ctx: &mut Context, board: &Board, spritemap: &Texture) -> tetra::Result {
+    let mut clicked_tile: Option<(usize, usize)> = None;
+    if tetra::input::is_mouse_button_down(ctx, tetra::input::MouseButton::Left) {
+        clicked_tile = get_tile_at_pixel(board, tetra::input::get_mouse_position(ctx));
+    }
     for (tile_pos, tilestate) in board.get_tilestates().indexed_iter() {
         let tile_sprite = match tilestate {
-            TileState::Hidden => TileSprite::Hidden,
+            TileState::Hidden => {
+                if clicked_tile == Some(tile_pos) {
+                    TileSprite::HiddenClick
+                } else {
+                    TileSprite::Hidden
+                }
+            }
             TileState::Flagged => TileSprite::Flagged,
-            TileState::QuestionMark => TileSprite::QuestionMark,
+            TileState::QuestionMark => {
+                if clicked_tile == Some(tile_pos) {
+                    TileSprite::QuestionMarkClick
+                } else {
+                    TileSprite::QuestionMark
+                }
+            }
             TileState::Uncovered => match board.get_tiles()[tile_pos] {
                 Tile::Mine => TileSprite::Mine,
                 Tile::Safe(0) => TileSprite::Safe0,
@@ -80,10 +96,10 @@ pub fn get_tile_display_pos((y, x): (usize, usize)) -> (f32, f32) {
     )
 }
 
-pub fn get_tile_at_pixel(grid: &Board, (pixel_x, pixel_y): (f32, f32)) -> Option<(usize, usize)> {
-    let x = ((pixel_x - TILE_OFFSET_X) / TILE_SIZE).floor() as usize;
-    let y = ((pixel_y - TILE_OFFSET_Y) / TILE_SIZE).floor() as usize;
-    let &(max_y, max_x) = grid.get_size();
+pub fn get_tile_at_pixel(board: &Board, mouse_pos: Vec2) -> Option<(usize, usize)> {
+    let x = ((mouse_pos[0] - TILE_OFFSET_X) / TILE_SIZE).floor() as usize;
+    let y = ((mouse_pos[1] - TILE_OFFSET_Y) / TILE_SIZE).floor() as usize;
+    let &(max_y, max_x) = board.get_size();
     if y < max_y && x < max_x {
         Some((y, x))
     } else {

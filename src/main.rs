@@ -21,7 +21,7 @@ struct GameState {
 impl GameState {
     fn new(ctx: &mut Context) -> tetra::Result<GameState> {
         let mut board = grid::Board::make_random((16, 30), 99).unwrap();
-        board.reveal_all();
+        // board.reveal_all();
         Ok(GameState {
             board,
             borders_nineslice: graphics::get_border_nineslice(ctx)?,
