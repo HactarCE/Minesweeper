@@ -6,9 +6,10 @@ use tetra::graphics::{self, texture::Texture, ui::NineSlice, DrawParams, Rectang
 use tetra::Context;
 
 const NINESLICE_VERTICAL_EXTRA: f32 = 36.0;
-const OFFSET_GRID: (f32, f32) = (15.0, 51.0);
 const OFFSET_MINES_COUNT: (f32, f32) = (15.0, 18.0);
 const OFFSET_TIMER: (f32, f32) = (232.0, 18.0);
+const TILE_OFFSET_X: f32 = 15.0;
+const TILE_OFFSET_Y: f32 = 51.0;
 const TILE_SIZE: f32 = 16.0;
 const TOTAL_PADDING: (f32, f32) = (48.0 - 18.0, 84.0 - 18.0);
 
@@ -26,7 +27,6 @@ pub fn get_tiles_spritesheet(ctx: &mut Context) -> tetra::Result<Texture> {
 }
 
 pub fn reset_window_size(ctx: &mut Context, grid_size: &(usize, usize)) {
-    // Set up window.
     let board_size = vec2_from_reverse_usize_tuple(grid_size);
     let window_size = board_size * TILE_SIZE + vec2_from_tuple(&TOTAL_PADDING);
     graphics::set_internal_size(ctx, window_size[0] as i32, window_size[1] as i32);
@@ -34,7 +34,6 @@ pub fn reset_window_size(ctx: &mut Context, grid_size: &(usize, usize)) {
 }
 
 pub fn draw_borders(ctx: &mut Context, nineslice: &mut NineSlice) -> tetra::Result {
-    // Draw border
     nineslice.set_size(
         graphics::get_internal_width(ctx) as f32,
         graphics::get_internal_height(ctx) as f32 + NINESLICE_VERTICAL_EXTRA,
@@ -44,16 +43,12 @@ pub fn draw_borders(ctx: &mut Context, nineslice: &mut NineSlice) -> tetra::Resu
 }
 
 pub fn draw_tiles(ctx: &mut Context, board: &Board, spritemap: &Texture) -> tetra::Result {
-    // Draw cells
-    let (grid_offset_x, grid_offset_y) = OFFSET_GRID;
-    for ((y, x), tilestate) in board.get_tilestates().indexed_iter() {
-        let sprite_x = grid_offset_x + (TILE_SIZE * x as f32);
-        let sprite_y = grid_offset_y + (TILE_SIZE * y as f32);
+    for (tile_pos, tilestate) in board.get_tilestates().indexed_iter() {
         let tile_sprite = match tilestate {
             TileState::Hidden => TileSprite::Hidden,
             TileState::Flagged => TileSprite::Flagged,
             TileState::QuestionMark => TileSprite::QuestionMark,
-            TileState::Uncovered => match board.get_tiles()[(y, x)] {
+            TileState::Uncovered => match board.get_tiles()[tile_pos] {
                 Tile::Mine => TileSprite::Mine,
                 Tile::Safe(0) => TileSprite::Safe0,
                 Tile::Safe(1) => TileSprite::Safe1,
@@ -71,9 +66,27 @@ pub fn draw_tiles(ctx: &mut Context, board: &Board, spritemap: &Texture) -> tetr
             ctx,
             spritemap,
             DrawParams::new()
-                .position(vec2_from_tuple(&(sprite_x, sprite_y)))
+                .position(vec2_from_tuple(&get_tile_display_pos(tile_pos)))
                 .clip(tile_sprite.into()),
         )
     }
     Ok(())
+}
+
+pub fn get_tile_display_pos((y, x): (usize, usize)) -> (f32, f32) {
+    (
+        TILE_SIZE * x as f32 + TILE_OFFSET_X,
+        TILE_SIZE * y as f32 + TILE_OFFSET_Y,
+    )
+}
+
+pub fn get_tile_at_pixel(grid: &Board, (pixel_x, pixel_y): (f32, f32)) -> Option<(usize, usize)> {
+    let x = ((pixel_x - TILE_OFFSET_X) / TILE_SIZE).floor() as usize;
+    let y = ((pixel_y - TILE_OFFSET_Y) / TILE_SIZE).floor() as usize;
+    let &(max_y, max_x) = grid.get_size();
+    if y < max_y && x < max_x {
+        Some((y, x))
+    } else {
+        None
+    }
 }
