@@ -15,6 +15,18 @@ pub struct Board {
     tilestates: Array2<TileState>,
 }
 
+impl Board {
+    pub fn get_size(&self) -> &Pos {
+        &self.size
+    }
+    pub fn get_tiles(&self) -> &Array2<Tile> {
+        &self.tiles
+    }
+    pub fn get_tilestates(&self) -> &Array2<TileState> {
+        &self.tilestates
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub enum Tile {
     Mine,
@@ -26,10 +38,14 @@ pub enum TileState {
     Hidden,
     Flagged,
     QuestionMark,
-    Shown,
+    Uncovered,
 }
 
 impl Board {
+    pub fn reveal_all(&mut self) {
+        self.tilestates.fill(TileState::Uncovered);
+    }
+
     /// Make a new empty board with a given size.
     pub fn make_empty(size: (usize, usize)) -> Board {
         Board {
@@ -62,7 +78,7 @@ impl Board {
                 Tile::Safe(0) => return,
                 // Remove mines from this square and adjacent ones.
                 _ => {
-                    for neighbor_pos in neighbors_coords(start) {
+                    for neighbor_pos in self.neighbors_coords(start) {
                         self.relocate_mine(neighbor_pos);
                     }
                 }
@@ -137,18 +153,30 @@ impl Board {
     }
 
     /// Return a slice of the 3x3 box surrounding a square.
-    pub fn neighbor_slice(&self, (y, x): Pos) -> ndarray::ArrayView2<Tile> {
-        self.tiles.slice(s![y - 1..y + 2, x - 1..x + 2])
+    fn neighbor_slice(&self, (y, x): Pos) -> ndarray::ArrayView2<Tile> {
+        self.tiles
+            .slice(s![self.y_nieghbor_range(y), self.x_neighbor_range(x)])
     }
 
     /// Return a mutable slice of the 3x3 box surrounding a square.
-    pub fn neighbor_slice_mut(&mut self, (y, x): Pos) -> ndarray::ArrayViewMut2<Tile> {
-        self.tiles.slice_mut(s![y - 1..y + 2, x - 1..x + 2])
+    fn neighbor_slice_mut(&mut self, (y, x): Pos) -> ndarray::ArrayViewMut2<Tile> {
+        self.tiles
+            .slice_mut(s![self.y_nieghbor_range(y), self.x_neighbor_range(x)])
     }
-}
 
-pub fn neighbors_coords((y, x): Pos) -> impl Iterator<Item = Pos> {
-    (y - 1..y + 2)
-        .zip(iter::repeat(x))
-        .flat_map(|(y_, x)| iter::repeat(y_).zip(x - 1..x + 2))
+    /// Return an iterator of the coordinates of the 3x3 box surrounding a
+    /// square.
+    pub fn neighbors_coords(&self, (y, x): Pos) -> impl Iterator<Item = Pos> {
+        (self.y_nieghbor_range(y))
+            .zip(iter::repeat(self.x_neighbor_range(x)))
+            .flat_map(|(y_, x_range)| iter::repeat(y_).zip(x_range))
+    }
+
+    fn y_nieghbor_range(&self, y: usize) -> std::ops::Range<usize> {
+        (if y == 0 { 0 } else { y - 1 })..std::cmp::min(y + 2, self.size.0)
+    }
+
+    fn x_neighbor_range(&self, x: usize) -> std::ops::Range<usize> {
+        (if x == 0 { 0 } else { x - 1 })..std::cmp::min(x + 2, self.size.1)
+    }
 }
