@@ -3,8 +3,8 @@
 #[macro_use]
 extern crate ndarray;
 
-mod graphics;
 mod grid;
+mod render;
 mod sprites;
 mod utils;
 
@@ -24,17 +24,17 @@ impl GameState {
         // board.reveal_all();
         Ok(GameState {
             board,
-            borders_nineslice: graphics::get_border_nineslice(ctx)?,
-            tiles_spritemap: graphics::get_tiles_spritesheet(ctx)?,
+            borders_nineslice: render::get_border_nineslice(ctx)?,
+            tiles_spritemap: render::get_tiles_spritesheet(ctx)?,
         })
     }
 }
 
 impl State for GameState {
     fn draw(&mut self, ctx: &mut Context, _dt: f64) -> tetra::Result {
-        graphics::reset_window_size(ctx, self.board.get_size());
-        graphics::draw_borders(ctx, &mut self.borders_nineslice)?;
-        graphics::draw_tiles(ctx, &self.board, &self.tiles_spritemap)?;
+        render::reset_window_size(ctx, self.board.get_size());
+        render::draw_borders(ctx, &mut self.borders_nineslice)?;
+        render::draw_tiles(ctx, &self.board, &self.tiles_spritemap)?;
         Ok(())
     }
 }
