@@ -3,44 +3,60 @@
 #[macro_use]
 extern crate ndarray;
 
-mod grid;
+mod board;
 mod render;
 mod sprites;
+mod ui;
 mod utils;
 
-use tetra::graphics::NineSlice;
-use tetra::graphics::Texture;
 use tetra::{Context, ContextBuilder, State};
 
+use board::Board;
+
 struct GameState {
-    board: grid::Board,
-    borders_nineslice: NineSlice,
-    tiles_spritemap: Texture,
+    board: Board,
+    render_state: render::RenderState,
+    ui_state: ui::UIState,
+    exploded: bool,
 }
 
 impl GameState {
-    fn new(ctx: &mut Context) -> tetra::Result<GameState> {
-        let mut board = grid::Board::make_random((16, 30), 99).unwrap();
-        // board.reveal_all();
-        Ok(GameState {
-            board,
-            borders_nineslice: render::get_border_nineslice(ctx)?,
-            tiles_spritemap: render::get_tiles_spritesheet(ctx)?,
-        })
+    fn new(ctx: &mut Context) -> tetra::Result<Self> {
+        let board = Board::make_random((16, 30), 99).unwrap();
+        let mut game_state = GameState {
+            board: Board::make_empty((1, 1)),
+            render_state: render::RenderState::new(ctx)?,
+            ui_state: ui::UIState::new(),
+            exploded: false,
+        };
+        game_state.set_board(ctx, board);
+        Ok(game_state)
+    }
+}
+
+impl GameState {
+    fn set_board(&mut self, ctx: &mut Context, board: Board) {
+        self.board = board;
+        self.reset_window_size(ctx);
     }
 }
 
 impl State for GameState {
+    fn update(&mut self, ctx: &mut Context) -> tetra::Result {
+        self.handle_tile_left_click(ctx);
+        self.handle_tile_right_click(ctx);
+        Ok(())
+    }
+
     fn draw(&mut self, ctx: &mut Context, _dt: f64) -> tetra::Result {
-        render::reset_window_size(ctx, self.board.get_size());
-        render::draw_borders(ctx, &mut self.borders_nineslice)?;
-        render::draw_tiles(ctx, &self.board, &self.tiles_spritemap)?;
+        self.draw_borders(ctx)?;
+        self.draw_tiles(ctx)?;
         Ok(())
     }
 }
 
 fn main() -> tetra::Result {
-    ContextBuilder::new("Hello, world!", 1280, 720)
+    ContextBuilder::new("Minesweeper", 1080, 720)
         .show_mouse(true)
         .build()?
         .run_with(GameState::new)

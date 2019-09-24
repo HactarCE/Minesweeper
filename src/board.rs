@@ -2,7 +2,7 @@ use ndarray::prelude::*;
 use rand::Rng;
 use std::iter;
 
-type Pos = (usize, usize);
+pub type Pos = (usize, usize);
 
 /// All information about a Minesweeper game
 #[derive(Clone, Debug)]
@@ -27,13 +27,13 @@ impl Board {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Tile {
     Mine,
     Safe(u8),
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum TileState {
     Hidden,
     Flagged,
@@ -42,6 +42,92 @@ pub enum TileState {
 }
 
 impl Board {
+    /// Reveal tiles adjacent to a discovered number tile it has the correct
+    /// number of adjacent flags. Return a (possibly empty) vector of the
+    /// coordinates of tiles that changed state.
+    fn reveal_adjacent(&mut self, pos: Pos) -> Vec<Pos> {
+        let mut result = vec![];
+        // Ensure that the tile is safe.
+        if let Tile::Safe(n) = self.tiles[pos] {
+            // Check the number of neighboring flags.
+            let mut flags = 0;
+            for neighbor_pos in self.neighbor_coords(pos) {
+                match self.tilestates[neighbor_pos] {
+                    TileState::Flagged => flags += 1,
+                    _ => (),
+                }
+            }
+            if flags == n {
+                // Reveal all non-flag neighbors.
+                for neighbor_pos in self.neighbor_coords(pos) {
+                    match self.tilestates[neighbor_pos] {
+                        TileState::Flagged | TileState::Uncovered => (),
+                        TileState::Hidden | TileState::QuestionMark => {
+                            self.reveal(neighbor_pos);
+                            result.push(neighbor_pos);
+                        }
+                    }
+                }
+            }
+        }
+        result
+    }
+
+    /// Reveal a single tile. Return a (possibly empty) vector of the
+    /// coordinates of tiles that changed state.
+    fn reveal(&mut self, pos: Pos) -> Vec<Pos> {
+        match self.tilestates[pos] {
+            TileState::Hidden | TileState::QuestionMark => {
+                self.tilestates[pos] = TileState::Uncovered;
+                // Cascade zeros (recursively).
+                let mut result = vec![pos];
+                if self.tiles[pos] == Tile::Safe(0) {
+                    for neighbor_pos in self.neighbor_coords(pos) {
+                        if self.tilestates[neighbor_pos] == TileState::Hidden {
+                            result.append(&mut self.reveal(neighbor_pos));
+                        }
+                    }
+                }
+                result
+            }
+            TileState::Flagged | TileState::Uncovered => vec![],
+        }
+    }
+
+    /// Cycle the flag/question mark on a single tile. Return a (possibly empty)
+    /// vector of the coordinates of tiles that changed state (which should be
+    /// one, at most).
+    fn cycle_flag(&mut self, pos: Pos) -> Vec<Pos> {
+        let mut result = vec![pos];
+        self.tilestates[pos] = match self.tilestates[pos] {
+            TileState::Hidden => TileState::Flagged,
+            TileState::Flagged => TileState::QuestionMark,
+            TileState::QuestionMark => TileState::Hidden,
+            other => {
+                result.pop();
+                other
+            }
+        };
+        result
+    }
+
+    /// Handle a left click on a tile and return a (possibly empty) vector of
+    /// coordinates that changed state as a result.
+    pub fn left_click(&mut self, pos: Pos) -> Vec<Pos> {
+        match self.tilestates[pos] {
+            TileState::Hidden | TileState::QuestionMark => self.reveal(pos),
+            TileState::Flagged => vec![],
+            TileState::Uncovered => self.reveal_adjacent(pos),
+        }
+    }
+
+    /// Handle a right click on a tile and return a (possibly empty) vector of
+    /// coordinates that changed state as a result.
+    pub fn right_click(&mut self, pos: Pos) -> Vec<Pos> {
+        self.cycle_flag(pos)
+    }
+
+    /// Reveal all tiles
     pub fn reveal_all(&mut self) {
         self.tilestates.fill(TileState::Uncovered);
     }
@@ -78,7 +164,7 @@ impl Board {
                 Tile::Safe(0) => return,
                 // Remove mines from this square and adjacent ones.
                 _ => {
-                    for neighbor_pos in self.neighbors_coords(start) {
+                    for neighbor_pos in self.neighbor_coords(start) {
                         self.relocate_mine(neighbor_pos);
                     }
                 }
@@ -166,7 +252,7 @@ impl Board {
 
     /// Return an iterator of the coordinates of the 3x3 box surrounding a
     /// square.
-    pub fn neighbors_coords(&self, (y, x): Pos) -> impl Iterator<Item = Pos> {
+    pub fn neighbor_coords(&self, (y, x): Pos) -> impl Iterator<Item = Pos> {
         (self.y_nieghbor_range(y))
             .zip(iter::repeat(self.x_neighbor_range(x)))
             .flat_map(|(y_, x_range)| iter::repeat(y_).zip(x_range))
@@ -178,5 +264,22 @@ impl Board {
 
     fn x_neighbor_range(&self, x: usize) -> std::ops::Range<usize> {
         (if x == 0 { 0 } else { x - 1 })..std::cmp::min(x + 2, self.size.1)
+    }
+}
+
+#[derive(Debug)]
+enum Difficulty {
+    Easy,
+    Medium,
+    Hard,
+}
+
+impl Difficulty {
+    fn new_game(self) -> Result<Board, &'static str> {
+        match self {
+            Difficulty::Easy => Board::make_random((9, 9), 10),
+            Difficulty::Medium => Board::make_random((16, 16), 40),
+            Difficulty::Hard => Board::make_random((16, 30), 99),
+        }
     }
 }
