@@ -42,13 +42,16 @@ impl GameState {
             seconds: 0,
             ticks: 0,
         };
-        let board = DIFFICULTY.new_game().unwrap();
-        game_state.set_board(ctx, board);
+        game_state.reset_game(ctx);
         Ok(game_state)
     }
 }
 
 impl GameState {
+    pub fn reset_game(&mut self, ctx: &mut Context) {
+        self.set_board(ctx, DIFFICULTY.new_game().unwrap());
+    }
+
     fn set_board(&mut self, ctx: &mut Context, board: Board) {
         self.board = board;
         self.reset_window_size(ctx);
@@ -86,10 +89,11 @@ impl State for GameState {
     }
 
     fn draw(&mut self, ctx: &mut Context, _dt: f64) -> tetra::Result {
-        self.draw_borders(ctx)?;
-        self.draw_tiles(ctx)?;
-        self.draw_mine_counter(ctx)?;
-        self.draw_timer(ctx)?;
+        self.draw_borders(ctx);
+        self.draw_tiles(ctx);
+        self.draw_mine_counter(ctx);
+        self.draw_timer(ctx);
+        self.draw_face(ctx);
         Ok(())
     }
 }

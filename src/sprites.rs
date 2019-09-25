@@ -49,3 +49,28 @@ pub fn get_7seg_sprite_clip(digit: usize) -> Rectangle {
     let sprite_id = (digit + 9) % 10;
     Rectangle::new(sprite_id as f32 * 14.0 + 2.0, 2.0, 13.0, 23.0)
 }
+
+#[derive(Debug)]
+pub enum FaceSprite {
+    Happy,
+    HappyPressed,
+    Scared,
+    Cool,
+    Dead,
+}
+
+impl Into<Rectangle> for FaceSprite {
+    fn into(self) -> Rectangle {
+        let (u, v) = (
+            match self {
+                FaceSprite::Happy => 2.0,
+                FaceSprite::HappyPressed => 29.0,
+                FaceSprite::Scared => 56.0,
+                FaceSprite::Cool => 83.0,
+                FaceSprite::Dead => 110.0,
+            },
+            26.0,
+        );
+        Rectangle::new(u, v, 26.0, 26.0)
+    }
+}

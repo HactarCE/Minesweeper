@@ -8,8 +8,9 @@ use crate::GameStage;
 use crate::GameState;
 
 pub struct UIState {
-    left_clicked_tile: Option<(usize, usize)>,
-    right_clicked_tile: Option<(usize, usize)>,
+    pub left_clicked_tile: Option<(usize, usize)>,
+    pub right_clicked_tile: Option<(usize, usize)>,
+    pub face_clicked: bool,
 }
 
 impl UIState {
@@ -17,11 +18,25 @@ impl UIState {
         Self {
             left_clicked_tile: None,
             right_clicked_tile: None,
+            face_clicked: false,
         }
     }
 }
 
 impl GameState {
+    pub fn handle_face_click(&mut self, ctx: &mut Context) {
+        if self.is_mouse_on_face(ctx) {
+            if input::is_mouse_button_pressed(ctx, MouseButton::Left) {
+                self.ui_state.face_clicked = true;
+            } else if input::is_mouse_button_released(ctx, MouseButton::Left) {
+                if self.ui_state.face_clicked {
+                    self.reset_game(ctx);
+                    self.ui_state.face_clicked = false;
+                }
+            }
+        }
+    }
+
     pub fn handle_tile_left_click(&mut self, ctx: &mut Context) -> Vec<Pos> {
         let hover_tile = self.get_tile_at_cursor(ctx);
         if let Some(_) = self.ui_state.left_clicked_tile {
