@@ -1,15 +1,16 @@
+use std::convert::TryInto;
+use tetra::graphics::{self, texture::Texture, ui::NineSlice, DrawParams, Rectangle, Vec2};
+use tetra::Context;
+
 use crate::board::{Tile, TileState};
 use crate::sprites::*;
 use crate::utils::*;
 use crate::GameStage;
 use crate::GameState;
 
-use tetra::graphics::{self, texture::Texture, ui::NineSlice, DrawParams, Rectangle, Vec2};
-use tetra::Context;
-
 const NINESLICE_VERTICAL_EXTRA: f32 = 36.0;
 const OFFSET_MINES_COUNT: (f32, f32) = (15.0, 18.0);
-const OFFSET_TIMER: (f32, f32) = (232.0, 18.0);
+const OFFSET_TIMER: (f32, f32) = (-(13.0 * 3.0 + 15.0), 18.0);
 const TILE_OFFSET_X: f32 = 15.0;
 const TILE_OFFSET_Y: f32 = 51.0;
 const TILE_SIZE: f32 = 16.0;
@@ -17,7 +18,7 @@ const TOTAL_PADDING: (f32, f32) = (48.0 - 18.0, 84.0 - 18.0);
 
 pub struct RenderState {
     borders_nineslice: NineSlice,
-    tiles_spritemap: Texture,
+    spritemap: Texture,
 }
 
 impl RenderState {
@@ -29,7 +30,7 @@ impl RenderState {
                 0.0,
                 Rectangle::new(16.0, 52.0, 16.0, 16.0),
             ),
-            tiles_spritemap: Texture::new(ctx, "./resources/spritemap.png")?,
+            spritemap: Texture::new(ctx, "./resources/spritemap.png")?,
         })
     }
 }
@@ -104,7 +105,7 @@ impl GameState {
             };
             graphics::draw(
                 ctx,
-                &self.render_state.tiles_spritemap,
+                &self.render_state.spritemap,
                 DrawParams::new()
                     .position(vec2_from_tuple(&self.get_tile_display_pos(tile_pos)))
                     .clip(tile_sprite.into()),
@@ -130,5 +131,42 @@ impl GameState {
         } else {
             None
         }
+    }
+
+    pub fn draw_mine_counter(&self, ctx: &mut Context) -> tetra::Result {
+        self.draw_triple_7seg(
+            ctx,
+            vec2_from_tuple(&OFFSET_MINES_COUNT),
+            self.board.get_flags_left().try_into().unwrap_or(0),
+        )
+    }
+
+    pub fn draw_timer(&self, ctx: &mut Context) -> tetra::Result {
+        self.draw_triple_7seg(
+            ctx,
+            vec2_from_tuple(&OFFSET_TIMER)
+                + Vec2::new(tetra::graphics::get_internal_width(ctx) as f32, 0.0),
+            self.seconds,
+        )
+    }
+
+    fn draw_triple_7seg(
+        &self,
+        ctx: &mut Context,
+        mut position: Vec2,
+        mut number: usize,
+    ) -> tetra::Result {
+        for _ in 0..3 {
+            graphics::draw(
+                ctx,
+                &self.render_state.spritemap,
+                DrawParams::new()
+                    .position(position)
+                    .clip(get_7seg_sprite_clip((number / 100) % 10)),
+            );
+            number *= 10;
+            position += Vec2::new(13.0, 0.0);
+        }
+        Ok(())
     }
 }

@@ -110,8 +110,14 @@ impl Board {
     fn cycle_flag(&mut self, pos: Pos) -> Vec<Pos> {
         let mut result = vec![pos];
         self.tilestates[pos] = match self.tilestates[pos] {
-            TileState::Hidden => TileState::Flagged,
-            TileState::Flagged => TileState::QuestionMark,
+            TileState::Hidden => {
+                self.flags_left -= 1;
+                TileState::Flagged
+            }
+            TileState::Flagged => {
+                self.flags_left += 1;
+                TileState::QuestionMark
+            }
             TileState::QuestionMark => TileState::Hidden,
             other => {
                 result.pop();

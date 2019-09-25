@@ -44,3 +44,8 @@ impl Into<Rectangle> for TileSprite {
         Rectangle::new(u, v, 16.0, 16.0)
     }
 }
+
+pub fn get_7seg_sprite_clip(digit: usize) -> Rectangle {
+    let sprite_id = (digit + 9) % 10;
+    Rectangle::new(sprite_id as f32 * 14.0 + 2.0, 2.0, 13.0, 23.0)
+}
