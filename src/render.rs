@@ -64,8 +64,8 @@ impl GameState {
             let tile = self.board.get_tiles()[tile_pos];
             let tile_sprite = match tilestate {
                 TileState::Hidden => {
-                    if self.stage == GameStage::EXPLODED && tile == Tile::Mine {
-                        TileSprite::MineExploded
+                    if self.stage == GameStage::Exploded && tile == Tile::Mine {
+                        TileSprite::Mine
                     } else if clicked_tile == Some(tile_pos) {
                         TileSprite::HiddenClick
                     } else {
@@ -73,14 +73,14 @@ impl GameState {
                     }
                 }
                 TileState::Flagged => {
-                    if self.stage == GameStage::EXPLODED && tile != Tile::Mine {
+                    if self.stage == GameStage::Exploded && tile != Tile::Mine {
                         TileSprite::IncorrectFlag
                     } else {
                         TileSprite::Flagged
                     }
                 }
                 TileState::QuestionMark => {
-                    if self.stage == GameStage::EXPLODED && tile == Tile::Mine {
+                    if self.stage == GameStage::Exploded && tile == Tile::Mine {
                         TileSprite::MineExploded
                     } else if clicked_tile == Some(tile_pos) {
                         TileSprite::QuestionMarkClick
@@ -89,7 +89,7 @@ impl GameState {
                     }
                 }
                 TileState::Uncovered => match tile {
-                    Tile::Mine => TileSprite::Mine,
+                    Tile::Mine => TileSprite::MineExploded,
                     Tile::Safe(0) => TileSprite::Safe0,
                     Tile::Safe(1) => TileSprite::Safe1,
                     Tile::Safe(2) => TileSprite::Safe2,

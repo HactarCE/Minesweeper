@@ -3,7 +3,7 @@ use tetra::{
     Context,
 };
 
-use crate::board::Pos;
+use crate::board::{Pos, Tile, TileState};
 use crate::GameStage;
 use crate::GameState;
 
@@ -30,11 +30,18 @@ impl GameState {
             } else if input::is_mouse_button_released(ctx, MouseButton::Left) {
                 self.ui_state.left_clicked_tile = None;
                 if let Some(hover_tile) = hover_tile {
-                    if self.stage == GameStage::PRE {
+                    if self.stage == GameStage::Pre {
                         self.board.ensure_safe_start(hover_tile);
-                        self.stage = GameStage::PLAYING;
+                        self.stage = GameStage::Playing;
                     }
-                    return self.board.left_click(hover_tile);
+                    let updated_squares = self.board.left_click(hover_tile);
+                    for pos in updated_squares {
+                        if self.board.get_tiles()[pos] == Tile::Mine
+                            && self.board.get_tilestates()[pos] == TileState::Uncovered
+                        {
+                            self.stage = GameStage::Exploded;
+                        }
+                    }
                 }
             }
         } else if input::is_mouse_button_pressed(ctx, MouseButton::Left) {

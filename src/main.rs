@@ -15,10 +15,10 @@ use board::Board;
 
 #[derive(Debug, PartialEq)]
 enum GameStage {
-    PRE,
-    PLAYING,
-    EXPLODED,
-    COMPLETE,
+    Pre,
+    Playing,
+    Exploded,
+    Complete,
 }
 
 struct GameState {
@@ -35,7 +35,7 @@ impl GameState {
             board: Board::make_empty((1, 1)),
             render_state: render::RenderState::new(ctx)?,
             ui_state: ui::UIState::new(),
-            stage: GameStage::PRE,
+            stage: GameStage::Pre,
         };
         game_state.set_board(ctx, board);
         Ok(game_state)
@@ -51,8 +51,13 @@ impl GameState {
 
 impl State for GameState {
     fn update(&mut self, ctx: &mut Context) -> tetra::Result {
-        self.handle_tile_left_click(ctx);
-        self.handle_tile_right_click(ctx);
+        if let GameStage::Pre | GameStage::Playing = self.stage {
+            self.handle_tile_left_click(ctx);
+            self.handle_tile_right_click(ctx);
+        }
+        if self.stage == GameStage::Playing && self.board.get_safe_squares_left() == 0 {
+            self.stage = GameStage::Complete;
+        }
         Ok(())
     }
 

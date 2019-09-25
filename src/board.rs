@@ -13,6 +13,10 @@ pub struct Board {
     tiles: Array2<Tile>,
     /// An array describing visibility, flags, and question marks.
     tilestates: Array2<TileState>,
+    /// The number of flags remaining.
+    flags_left: isize,
+    /// The number of undiscovered safe squares.
+    safe_squares_left: isize,
 }
 
 impl Board {
@@ -24,6 +28,12 @@ impl Board {
     }
     pub fn get_tilestates(&self) -> &Array2<TileState> {
         &self.tilestates
+    }
+    pub fn get_flags_left(&self) -> isize {
+        self.flags_left
+    }
+    pub fn get_safe_squares_left(&self) -> isize {
+        self.safe_squares_left
     }
 }
 
@@ -138,6 +148,8 @@ impl Board {
             size: size,
             tiles: Array2::from_elem(size, Tile::Safe(0)),
             tilestates: Array2::from_elem(size, TileState::Hidden),
+            flags_left: 0,
+            safe_squares_left: (size.0 * size.1) as isize,
         }
     }
 
@@ -193,6 +205,8 @@ impl Board {
                 *n += 1
             }
         }
+        self.flags_left += 1;
+        self.safe_squares_left -= 1;
     }
 
     /// Remove a mine from a specific location on the board. Return true if the
@@ -216,6 +230,8 @@ impl Board {
             }
         }
         self.tiles[pos] = Tile::Safe(mine_count);
+        self.flags_left -= 1;
+        self.safe_squares_left += 1;
         true
     }
 
