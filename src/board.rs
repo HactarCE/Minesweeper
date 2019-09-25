@@ -89,6 +89,7 @@ impl Board {
         match self.tilestates[pos] {
             TileState::Hidden | TileState::QuestionMark => {
                 self.tilestates[pos] = TileState::Uncovered;
+                self.safe_squares_left -= 1;
                 // Cascade zeros (recursively).
                 let mut result = vec![pos];
                 if self.tiles[pos] == Tile::Safe(0) {

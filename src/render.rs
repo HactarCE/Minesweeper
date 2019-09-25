@@ -61,8 +61,10 @@ impl GameState {
 
     pub fn draw_tiles(&self, ctx: &mut Context) {
         let mut clicked_tile: Option<(usize, usize)> = None;
-        if tetra::input::is_mouse_button_down(ctx, tetra::input::MouseButton::Left) {
-            clicked_tile = self.get_tile_at_cursor(ctx);
+        if let GameStage::Pre | GameStage::Playing = self.stage {
+            if tetra::input::is_mouse_button_down(ctx, tetra::input::MouseButton::Left) {
+                clicked_tile = self.get_tile_at_cursor(ctx);
+            }
         }
         for (tile_pos, tilestate) in self.board.get_tilestates().indexed_iter() {
             let tile = self.board.get_tiles()[tile_pos];

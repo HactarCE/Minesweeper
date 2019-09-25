@@ -13,7 +13,7 @@ use tetra::{Context, ContextBuilder, State};
 
 use board::{Board, Difficulty};
 
-const DIFFICULTY: Difficulty = Difficulty::Intermediate;
+const DIFFICULTY: Difficulty = Difficulty::Beginner;
 
 #[derive(Debug, PartialEq)]
 enum GameStage {
@@ -56,6 +56,7 @@ impl GameState {
         self.board = board;
         self.reset_window_size(ctx);
         self.reset_timer(ctx);
+        self.stage = GameStage::Pre;
     }
 
     fn reset_timer(&mut self, ctx: &mut Context) {
@@ -85,6 +86,7 @@ impl State for GameState {
         if self.stage == GameStage::Playing && self.board.get_safe_squares_left() == 0 {
             self.stage = GameStage::Complete;
         }
+        self.handle_face_click(ctx);
         Ok(())
     }
 
