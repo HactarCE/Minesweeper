@@ -162,8 +162,11 @@ impl Board {
 
     /// Make a new random board with a given size and number of mines.
     pub fn make_random(size: (usize, usize), mines: usize) -> Result<Board, &'static str> {
+        if size.0 < 5 || size.1 < 0 {
+            return Err("Board size must be at least 5x5");
+        }
         if mines > size.0 * size.1 / 2 {
-            return Err("Mine density cannot be greater than 50%");
+            return Err("Mine density must be less than 50%");
         }
         let mut board = Board::make_empty(size);
         for _ in 0..mines {
@@ -297,16 +300,25 @@ pub enum Difficulty {
     Beginner,
     Intermediate,
     Expert,
+    Custom { size: (usize, usize), mines: usize },
 }
 
 impl Difficulty {
     /// Make a new random board with a preset size and number of mines based on
     /// the given difficulty.
-    pub fn new_game(self) -> Result<Board, &'static str> {
+    pub fn new_game(&self) -> Result<Board, &'static str> {
         match self {
             Difficulty::Beginner => Board::make_random((9, 9), 10),
             Difficulty::Intermediate => Board::make_random((16, 16), 40),
             Difficulty::Expert => Board::make_random((16, 30), 99),
+            Difficulty::Custom { size, mines } => Board::make_random(*size, *mines),
+        }
+    }
+
+    pub fn with_density((h, w): (usize, usize), density: f32) -> Difficulty {
+        Difficulty::Custom {
+            size: (h, w),
+            mines: ((h * w) as f32 * density).round() as usize,
         }
     }
 }

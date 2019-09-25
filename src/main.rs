@@ -13,8 +13,6 @@ use tetra::{Context, ContextBuilder, State};
 
 use board::{Board, Difficulty};
 
-const DIFFICULTY: Difficulty = Difficulty::Beginner;
-
 #[derive(Debug, PartialEq)]
 enum GameStage {
     Pre,
@@ -25,6 +23,7 @@ enum GameStage {
 
 struct GameState {
     board: Board,
+    difficulty: Difficulty,
     render_state: render::RenderState,
     ui_state: ui::UIState,
     stage: GameStage,
@@ -33,9 +32,10 @@ struct GameState {
 }
 
 impl GameState {
-    fn new(ctx: &mut Context) -> tetra::Result<Self> {
+    pub fn new(ctx: &mut Context, difficulty: Difficulty) -> tetra::Result<Self> {
         let mut game_state = GameState {
             board: Board::make_empty((1, 1)),
+            difficulty: difficulty,
             render_state: render::RenderState::new(ctx)?,
             ui_state: ui::UIState::new(),
             stage: GameStage::Pre,
@@ -49,7 +49,7 @@ impl GameState {
 
 impl GameState {
     pub fn reset_game(&mut self, ctx: &mut Context) {
-        self.set_board(ctx, DIFFICULTY.new_game().unwrap());
+        self.set_board(ctx, self.difficulty.new_game().unwrap());
     }
 
     fn set_board(&mut self, ctx: &mut Context, board: Board) {
@@ -101,8 +101,9 @@ impl State for GameState {
 }
 
 fn main() -> tetra::Result {
+    let difficulty = Difficulty::Beginner;
     ContextBuilder::new("Minesweeper", 1080, 720)
         .show_mouse(true)
         .build()?
-        .run_with(GameState::new)
+        .run_with(|ctx| GameState::new(ctx, difficulty))
 }
