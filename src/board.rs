@@ -292,18 +292,20 @@ impl Board {
 }
 
 #[derive(Debug)]
-enum Difficulty {
-    Easy,
-    Medium,
-    Hard,
+pub enum Difficulty {
+    Beginner,
+    Intermediate,
+    Expert,
 }
 
 impl Difficulty {
-    fn new_game(self) -> Result<Board, &'static str> {
+    /// Make a new random board with a preset size and number of mines based on
+    /// the given difficulty.
+    pub fn new_game(self) -> Result<Board, &'static str> {
         match self {
-            Difficulty::Easy => Board::make_random((9, 9), 10),
-            Difficulty::Medium => Board::make_random((16, 16), 40),
-            Difficulty::Hard => Board::make_random((16, 30), 99),
+            Difficulty::Beginner => Board::make_random((9, 9), 10),
+            Difficulty::Intermediate => Board::make_random((16, 16), 40),
+            Difficulty::Expert => Board::make_random((16, 30), 99),
         }
     }
 }

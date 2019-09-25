@@ -11,7 +11,9 @@ mod utils;
 
 use tetra::{Context, ContextBuilder, State};
 
-use board::Board;
+use board::{Board, Difficulty};
+
+const DIFFICULTY: Difficulty = Difficulty::Intermediate;
 
 #[derive(Debug, PartialEq)]
 enum GameStage {
@@ -32,7 +34,6 @@ struct GameState {
 
 impl GameState {
     fn new(ctx: &mut Context) -> tetra::Result<Self> {
-        let board = Board::make_random((16, 30), 99).unwrap();
         let mut game_state = GameState {
             board: Board::make_empty((1, 1)),
             render_state: render::RenderState::new(ctx)?,
@@ -41,6 +42,7 @@ impl GameState {
             seconds: 0,
             ticks: 0,
         };
+        let board = DIFFICULTY.new_game().unwrap();
         game_state.set_board(ctx, board);
         Ok(game_state)
     }
