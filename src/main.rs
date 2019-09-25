@@ -13,11 +13,19 @@ use tetra::{Context, ContextBuilder, State};
 
 use board::Board;
 
+#[derive(Debug, PartialEq)]
+enum GameStage {
+    PRE,
+    PLAYING,
+    EXPLODED,
+    COMPLETE,
+}
+
 struct GameState {
     board: Board,
     render_state: render::RenderState,
     ui_state: ui::UIState,
-    exploded: bool,
+    stage: GameStage,
 }
 
 impl GameState {
@@ -27,7 +35,7 @@ impl GameState {
             board: Board::make_empty((1, 1)),
             render_state: render::RenderState::new(ctx)?,
             ui_state: ui::UIState::new(),
-            exploded: false,
+            stage: GameStage::PRE,
         };
         game_state.set_board(ctx, board);
         Ok(game_state)

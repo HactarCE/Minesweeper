@@ -4,6 +4,7 @@ use tetra::{
 };
 
 use crate::board::Pos;
+use crate::GameStage;
 use crate::GameState;
 
 pub struct UIState {
@@ -29,6 +30,10 @@ impl GameState {
             } else if input::is_mouse_button_released(ctx, MouseButton::Left) {
                 self.ui_state.left_clicked_tile = None;
                 if let Some(hover_tile) = hover_tile {
+                    if self.stage == GameStage::PRE {
+                        self.board.ensure_safe_start(hover_tile);
+                        self.stage = GameStage::PLAYING;
+                    }
                     return self.board.left_click(hover_tile);
                 }
             }

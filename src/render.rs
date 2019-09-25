@@ -1,6 +1,7 @@
 use crate::board::{Tile, TileState};
 use crate::sprites::*;
 use crate::utils::*;
+use crate::GameStage;
 use crate::GameState;
 
 use tetra::graphics::{self, texture::Texture, ui::NineSlice, DrawParams, Rectangle, Vec2};
@@ -63,7 +64,7 @@ impl GameState {
             let tile = self.board.get_tiles()[tile_pos];
             let tile_sprite = match tilestate {
                 TileState::Hidden => {
-                    if self.exploded && tile == Tile::Mine {
+                    if self.stage == GameStage::EXPLODED && tile == Tile::Mine {
                         TileSprite::MineExploded
                     } else if clicked_tile == Some(tile_pos) {
                         TileSprite::HiddenClick
@@ -72,14 +73,14 @@ impl GameState {
                     }
                 }
                 TileState::Flagged => {
-                    if self.exploded && tile != Tile::Mine {
+                    if self.stage == GameStage::EXPLODED && tile != Tile::Mine {
                         TileSprite::IncorrectFlag
                     } else {
                         TileSprite::Flagged
                     }
                 }
                 TileState::QuestionMark => {
-                    if self.exploded && tile == Tile::Mine {
+                    if self.stage == GameStage::EXPLODED && tile == Tile::Mine {
                         TileSprite::MineExploded
                     } else if clicked_tile == Some(tile_pos) {
                         TileSprite::QuestionMarkClick
