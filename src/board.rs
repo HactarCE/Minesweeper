@@ -203,7 +203,9 @@ impl Board {
             return false;
         }
         // Reset this square so that it is not counted in the number of mines.
-        self.tiles[pos] = Tile::Safe(0);
+        // Use the number 8 to prevent underflow (since this cell itself is
+        // included in the neighbor iterator).
+        self.tiles[pos] = Tile::Safe(8);
         let mut mine_count = 0;
         for neighbor in self.neighbor_slice_mut(pos) {
             match neighbor {
