@@ -49,7 +49,10 @@ impl GameState {
 
 impl GameState {
     pub fn reset_game(&mut self, ctx: &mut Context) {
-        self.set_board(ctx, self.difficulty.new_game().unwrap());
+        self.set_board(
+            ctx,
+            self.difficulty.new_game().unwrap_or_else(|err| panic!(err)),
+        );
     }
 
     fn set_board(&mut self, ctx: &mut Context, board: Board) {
