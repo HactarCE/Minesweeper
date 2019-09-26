@@ -27,13 +27,18 @@ struct GameState {
     difficulty: Difficulty,
     render_state: render::RenderState,
     ui_state: ui::UIState,
+    scale_factor: usize,
     stage: GameStage,
     seconds: usize,
     ticks: usize,
 }
 
 impl GameState {
-    pub fn new(ctx: &mut Context, difficulty: Difficulty) -> tetra::Result<Self> {
+    pub fn new(
+        ctx: &mut Context,
+        difficulty: Difficulty,
+        scale_factor: usize,
+    ) -> tetra::Result<Self> {
         match difficulty.new_game() {
             Ok(board) => {
                 let mut game_state = GameState {
@@ -41,6 +46,7 @@ impl GameState {
                     difficulty: difficulty,
                     render_state: render::RenderState::new(ctx)?,
                     ui_state: ui::UIState::new(),
+                    scale_factor,
                     stage: GameStage::Pre,
                     seconds: 0,
                     ticks: 0,
@@ -116,29 +122,31 @@ impl State for GameState {
 }
 
 fn main() -> tetra::Result {
-    println!(
-        "{} {} created by {}",
-        env!("CARGO_PKG_NAME"),
-        env!("CARGO_PKG_VERSION"),
-        env!("CARGO_PKG_AUTHORS")
-    );
-    println!("{}", env!("CARGO_PKG_REPOSITORY"));
     println!();
-    match cli::get_difficulty_from_options() {
-        Ok(difficulty) => {
-            let window_size = GameState::get_window_size(&difficulty.size);
+    match cli::get_params_from_cli() {
+        Ok((difficulty, scale_factor)) => {
+            println!(
+                "{} {} created by {}",
+                env!("CARGO_PKG_NAME"),
+                env!("CARGO_PKG_VERSION"),
+                env!("CARGO_PKG_AUTHORS")
+            );
+            let window_size = GameState::get_window_size(&difficulty.size, scale_factor);
             ContextBuilder::new("Minesweeper", window_size.0, window_size.1)
                 .show_mouse(true)
                 .build()?
-                .run_with(|ctx| GameState::new(ctx, difficulty))
+                .run_with(|ctx| GameState::new(ctx, difficulty, scale_factor))
         }
-        Err(err) => {
-            if let Some(s) = err {
+        Err(err) => match err {
+            Some(s) => {
                 println!("Could not start game: {}", s);
-                println!();
+                println!("Use -h to view usage.");
+                std::process::exit(1);
             }
-            cli::print_usage();
-            std::process::exit(1);
-        }
+            None => {
+                cli::print_usage();
+                std::process::exit(1);
+            }
+        },
     }
 }

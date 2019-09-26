@@ -5,6 +5,12 @@ use crate::board::Difficulty;
 pub fn get_opts() -> Options {
     let mut opts = Options::new();
     opts.optflag("h", "help", "print this help text");
+    opts.optopt(
+        "s",
+        "scale",
+        "scale the entire window by a constant factor",
+        "SCALE_FACTOR",
+    );
     opts.optflag(
         "1",
         "beginner",
@@ -37,12 +43,29 @@ pub fn get_opts() -> Options {
     opts
 }
 
-pub fn get_difficulty_from_options() -> Result<Difficulty, Option<&'static str>> {
+pub fn get_params_from_cli() -> Result<(Difficulty, usize), Option<&'static str>> {
     let env_args: Vec<String> = std::env::args().collect();
     if let Ok(matches) = get_opts().parse(&env_args[1..]) {
         if matches.opt_present("h") {
             return Err(None);
         }
+        let mut scale_factor: Option<usize> = None;
+        if let Some(s) = matches.opt_str("s") {
+            if let Ok(n) = s.parse() {
+                if 1 > n && n > 4 {
+                    scale_factor = Some(n);
+                }
+            }
+        };
+        //     return Err(Some(
+        //     "Scale factor must be an integer from 1 to 4 (inclusive)",
+        // ));
+        if scale_factor == None && matches.opt_present("s") {
+            return Err(Some(
+                "Scale factor must be an integer from 1 to 4 (inclusive)",
+            ));
+        }
+        let scale_factor = scale_factor.unwrap_or(2);
         // Preset
         let mut result: Option<Difficulty> = None;
         {
@@ -136,10 +159,13 @@ pub fn get_difficulty_from_options() -> Result<Difficulty, Option<&'static str>>
                 mines = Some(((width * height) as f32 * density).round() as usize);
             }
             if let Some(mines) = mines {
-                return Ok(Difficulty {
-                    size: (height, width),
-                    mines,
-                });
+                return Ok((
+                    Difficulty {
+                        size: (height, width),
+                        mines,
+                    },
+                    scale_factor,
+                ));
             } else {
                 return Err(Some(
                     "A number or density of mines is required (use -m or -d)",
