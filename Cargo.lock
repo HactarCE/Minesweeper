@@ -602,7 +602,7 @@ dependencies = [
 
 [[package]]
 name = "minesweeper"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "getopts 0.2.21 (registry+https://github.com/rust-lang/crates.io-index)",
  "ndarray 0.12.1 (registry+https://github.com/rust-lang/crates.io-index)",
