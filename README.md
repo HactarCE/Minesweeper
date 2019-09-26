@@ -38,3 +38,8 @@ Mine count and mine density are mutually exclusive.
 If width is specified but not height (or vice versa), the board
 is assumed to be square.
 ```
+
+# TO-DO
+
+- Add CLI option for scaling (currently always 3x)
+- Allow boards up to 100x100 (possible once scaling is customizable)
