@@ -116,6 +116,14 @@ impl State for GameState {
 }
 
 fn main() -> tetra::Result {
+    println!(
+        "{} {} created by {}",
+        env!("CARGO_PKG_NAME"),
+        env!("CARGO_PKG_VERSION"),
+        env!("CARGO_PKG_AUTHORS")
+    );
+    println!("{}", env!("CARGO_PKG_REPOSITORY"));
+    println!();
     match cli::get_difficulty_from_options() {
         Ok(difficulty) => {
             let window_size = GameState::get_window_size(&difficulty.size);
