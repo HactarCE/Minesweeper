@@ -40,11 +40,15 @@ impl RenderState {
 }
 
 impl GameState {
+    pub fn get_window_size(board_size: &(usize, usize)) -> (i32, i32) {
+        let board_size = vec2_from_reverse_usize_tuple(board_size);
+        i32_tuple_from_vec2(&(board_size * TILE_SIZE + vec2_from_tuple(&TOTAL_PADDING)))
+    }
+
     pub fn reset_window_size(&self, ctx: &mut Context) {
-        let board_size = vec2_from_reverse_usize_tuple(self.board.get_size());
-        let window_size = board_size * TILE_SIZE + vec2_from_tuple(&TOTAL_PADDING);
-        graphics::set_internal_size(ctx, window_size[0] as i32, window_size[1] as i32);
-        tetra::window::set_size(ctx, window_size[0] as i32 * 3, window_size[1] as i32 * 3);
+        let window_size = GameState::get_window_size(self.board.get_size());
+        graphics::set_internal_size(ctx, window_size.0, window_size.1);
+        tetra::window::set_size(ctx, window_size.0 * 3, window_size.1 * 3);
     }
 
     pub fn draw_borders(&mut self, ctx: &mut Context) {

@@ -162,11 +162,14 @@ impl Board {
 
     /// Make a new random board with a given size and number of mines.
     pub fn make_random(size: (usize, usize), mines: usize) -> Result<Board, &'static str> {
-        if size.0 < 5 || size.1 < 0 {
-            return Err("Board size must be at least 5x5");
+        if size.0 < 1 || size.1 < 7 {
+            return Err("Board size must be at least 7x1");
         }
-        if mines > size.0 * size.1 / 2 {
-            return Err("Mine density must be less than 50%");
+        if 50 < size.0 || 50 < size.1 {
+            return Err("Board size may not be greater than 50x50");
+        }
+        if mines <= 0 || size.0 * size.1 / 2 < mines {
+            return Err("Mine density must be greater than 0% and no more than 50%");
         }
         let mut board = Board::make_empty(size);
         for _ in 0..mines {
@@ -178,8 +181,8 @@ impl Board {
     /// Ensure that a particular starting place on the board is safe. Assumes
     /// that there is sufficient empty space in the board to relocate mines.
     pub fn ensure_safe_start(&mut self, start: Pos) {
-        // Relocating mines does not actually _ensure_ safety, so just keep
-        // doing it until it works.
+        // Relocating mines once does not actually _ensure_ safety, so just keep
+        // doing it until the mines have all gone elsewhere.
         loop {
             match self.tiles[start] {
                 // Safe start! Return.
@@ -295,28 +298,40 @@ impl Board {
     }
 }
 
-#[derive(Debug)]
-pub enum Difficulty {
-    Beginner,
-    Intermediate,
-    Expert,
-    Custom { size: (usize, usize), mines: usize },
+#[derive(Debug, PartialEq)]
+pub struct Difficulty {
+    pub size: (usize, usize),
+    pub mines: usize,
 }
 
 impl Difficulty {
-    /// Make a new random board with a preset size and number of mines based on
-    /// the given difficulty.
-    pub fn new_game(&self) -> Result<Board, &'static str> {
-        match self {
-            Difficulty::Beginner => Board::make_random((9, 9), 10),
-            Difficulty::Intermediate => Board::make_random((16, 16), 40),
-            Difficulty::Expert => Board::make_random((16, 30), 99),
-            Difficulty::Custom { size, mines } => Board::make_random(*size, *mines),
+    pub fn beginner() -> Difficulty {
+        Difficulty {
+            size: (9, 9),
+            mines: 10,
+        }
+    }
+    pub fn intermediate() -> Difficulty {
+        Difficulty {
+            size: (16, 16),
+            mines: 40,
+        }
+    }
+    pub fn expert() -> Difficulty {
+        Difficulty {
+            size: (16, 30),
+            mines: 99,
         }
     }
 
+    /// Make a new random board with a preset size and number of mines based on
+    /// the given difficulty.
+    pub fn new_game(&self) -> Result<Board, &'static str> {
+        Board::make_random(self.size, self.mines)
+    }
+
     pub fn with_density((h, w): (usize, usize), density: f32) -> Difficulty {
-        Difficulty::Custom {
+        Difficulty {
             size: (h, w),
             mines: ((h * w) as f32 * density).round() as usize,
         }
