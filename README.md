@@ -17,6 +17,8 @@ Usage: ./minesweeper [options]
 
 Options:
     -h, --help          print this help text
+    -s, --scale SCALE_FACTOR
+                        scale the entire window by a constant factor
     -1, --beginner      play at BEGINNER difficulty (9x9 with 10 mines)
     -2, --intermediate  play at INTERMEDIATE difficulty (16x16 with 40 mines)
     -3, --expert        play at EXPERT difficulty (16x30 with 99 mines)
